@@ -117,6 +117,12 @@
       .brand { min-width: auto; }
       .crumb { display: none; }
     }
+    @media (max-width: 760px) {
+      .workspace { display: flex; flex-direction: column; }
+      .sidebar.left { order: 2; border-top: 1px solid #202b40; border-right: 0; padding: 13px; }
+      .tool-list { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .canvas-column { order: 1; }
+    }
     @media (max-width: 670px) {
       .topbar { height: auto; min-height: 62px; padding: 10px 13px; gap: 8px; }
       .brand-name { font-size: 12px; }
@@ -137,6 +143,11 @@
       canvas { min-height: 490px; }
       .canvas-footer { gap: 10px; font-size: 9px; }
       .kbd { display: none; }
+    }
+    @media (max-width: 540px) {
+      .tool-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .canvas-frame { min-height: 750px; }
+      canvas { min-height: 750px; }
     }
   </style>
 </head>
@@ -382,6 +393,7 @@
 
       function wireCurve(from, to) {
         const bend = Math.max(42, Math.min(130, Math.abs(to.x - from.x) * .48));
+        if (to.x < from.x + 35) return { c1: { x: from.x + 58, y: from.y }, c2: { x: to.x + 58, y: to.y } };
         return { c1: { x: from.x + bend, y: from.y }, c2: { x: to.x - bend, y: to.y } };
       }
 
@@ -587,11 +599,20 @@
       function loadExample() {
         nodes = []; wires = []; selected = null; pendingFrom = null; nextNodeId = 1; nextWireId = 1;
         const w = canvas.clientWidth, h = canvas.clientHeight;
-        const left = Math.max(28, w * .14), center = Math.max(210, w * .48), right = Math.min(w - nodeW - 24, w * .74), top = Math.max(50, h * .3);
-        const a = addNode('INPUT', left, top);
-        const b = addNode('INPUT', left, top + 145);
-        const gate = addNode('AND', center, top + 72);
-        const out = addNode('OUTPUT', right, top + 72);
+        let a, b, gate, out;
+        if (w < 540) {
+          const left = Math.max(16, (w - nodeW) / 2), top = 42;
+          a = addNode('INPUT', left, top);
+          b = addNode('INPUT', left, top + 140);
+          gate = addNode('AND', left, top + 280);
+          out = addNode('OUTPUT', left, top + 420);
+        } else {
+          const left = 18, center = (w - nodeW) / 2, right = w - nodeW - 18, top = Math.max(52, h * .27);
+          a = addNode('INPUT', left, top);
+          b = addNode('INPUT', left, top + 145);
+          gate = addNode('AND', center, top + 72);
+          out = addNode('OUTPUT', right, top + 72);
+        }
         wires = [{ id: nextWireId++, from: a.id, to: gate.id, pin: 0 }, { id: nextWireId++, from: b.id, to: gate.id, pin: 1 }, { id: nextWireId++, from: gate.id, to: out.id, pin: 0 }];
         selected = { kind: 'node', id: gate.id }; update(); say('Example loaded — toggle A and B to explore AND.');
       }
